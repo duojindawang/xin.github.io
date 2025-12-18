@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>致我最爱的你</title>
+    <title>致我最爱的芯芯</title>
     <style>
         * {
             margin: 0;
@@ -21,6 +21,8 @@
             justify-content: center;
             align-items: center;
             position: relative;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .container {
@@ -29,6 +31,7 @@
             padding: 20px;
             text-align: center;
             z-index: 10;
+            position: relative;
         }
 
         .card {
@@ -87,24 +90,46 @@
             text-shadow: 0 0 10px rgba(255, 105, 180, 0.7);
         }
 
-        .hint {
-            font-size: 1.3rem;
-            margin-top: 20px;
-            color: #ffd700;
-            text-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
-            animation: pulse 2s infinite;
-            cursor: pointer;
-            padding: 15px;
+        .start-btn {
+            background: linear-gradient(45deg, #ff69b4, #ff1493);
+            border: none;
+            padding: 18px 45px;
+            font-size: 1.4rem;
+            color: white;
             border-radius: 50px;
-            background: rgba(255, 215, 0, 0.1);
-            display: inline-block;
-            border: 1px solid rgba(255, 215, 0, 0.3);
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 8px 20px rgba(255, 20, 147, 0.4);
+            transition: all 0.3s ease;
+            font-weight: bold;
+            letter-spacing: 1px;
+            animation: pulse-btn 2s infinite;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.9; }
-            50% { transform: scale(1.05); opacity: 1; }
-            100% { transform: scale(1); opacity: 0.9; }
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(255, 20, 147, 0.6);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(255, 20, 147, 0.3);
+        }
+
+        @keyframes pulse-btn {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .hidden {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+            height: 0;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
         }
 
         canvas {
@@ -142,6 +167,24 @@
             100% { transform: translateY(-20vh) scale(1.5); opacity: 0; }
         }
 
+        .name-text {
+            position: fixed;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ff69b4;
+            text-shadow: 0 0 20px rgba(255, 105, 180, 0.9);
+            pointer-events: none;
+            z-index: 5;
+            animation: nameFade 1.5s ease-out forwards;
+            white-space: nowrap;
+        }
+
+        @keyframes nameFade {
+            0% { opacity: 1; transform: scale(0.5) translateY(0); }
+            50% { opacity: 1; transform: scale(1.2) translateY(-10px); }
+            100% { opacity: 0; transform: scale(1) translateY(-30px); }
+        }
+
         .footer {
             position: fixed;
             bottom: 15px;
@@ -150,14 +193,20 @@
             font-size: 0.9rem;
             color: rgba(255, 255, 255, 0.5);
             z-index: 10;
+            transition: opacity 0.5s;
+        }
+
+        .footer.hidden {
+            opacity: 0;
         }
 
         /* 响应式调整 */
         @media (max-width: 600px) {
             h1 { font-size: 2.2rem; }
             .message { font-size: 1.1rem; }
-            .hint { font-size: 1.1rem; padding: 12px; }
+            .start-btn { font-size: 1.2rem; padding: 15px 35px; }
             .card { padding: 20px; }
+            .name-text { font-size: 2rem; }
         }
     </style>
 </head>
@@ -166,19 +215,19 @@
     <div class="hearts" id="heartsContainer"></div>
 
     <div class="container">
-        <div class="card">
-            <h1>致我最爱的宝贝</h1>
+        <div class="card" id="welcomeCard">
+            <h1>致我最爱的芯芯宝贝</h1>
             <div class="message">
-                <p>亲爱的，自从遇见你，我的世界变得如此绚丽多彩。</p>
+                <p>亲爱的芯芯，自从遇见你，我的世界变得如此绚丽多彩。</p>
                 <p>你的笑容如星辰般闪耀，温暖了我每一个日夜。</p>
                 <p>今天，我想用漫天烟花表达我心中永恒的爱意。</p>
                 <p><span class="highlight">你是我此生最美的遇见，我会永远珍惜你。</span></p>
             </div>
-            <div class="hint" id="hint">↓ 滑动或点击屏幕，点燃爱的烟花 ↓</div>
+            <button class="start-btn" id="startBtn">点击开始，点燃爱的烟花</button>
         </div>
     </div>
 
-    <div class="footer">❤️ 点燃后会有惊喜的心形烟花哦  ❤️</div>
+    <div class="footer" id="footer">❤️ 点击屏幕会有"芯芯宝宝"惊喜哦  ❤️</div>
 
     <script>
         // 获取Canvas和上下文
@@ -200,7 +249,7 @@
 
         // 烟花类
         class Firework {
-            constructor(sx, sy, tx, ty) {
+            constructor(sx, sy, tx, ty, hue = null) {
                 this.x = sx;
                 this.y = sy;
                 this.tx = tx;
@@ -213,11 +262,11 @@
                     this.coordinates.push([this.x, this.y]);
                 }
                 this.angle = Math.atan2(ty - sy, tx - sx);
-                this.speed = 2;
-                this.acceleration = 1.05;
+                this.speed = 2.5; // 增加速度
+                this.acceleration = 1.08;
                 this.brightness = Math.random() * 50 + 50;
                 this.targetRadius = 1;
-                this.hue = Math.random() * 360;
+                this.hue = hue !== null ? hue : Math.random() * 360;
                 this.dead = false;
             }
 
@@ -248,7 +297,6 @@
                 ctx.lineWidth = 3;
                 ctx.stroke();
 
-                // 闪烁目标点
                 if (this.targetRadius < 8) {
                     this.targetRadius += 0.3;
                 } else {
@@ -322,7 +370,6 @@
 
                 ctx.stroke();
 
-                // 绘制发光点
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fillStyle = this.isHeart ? `hsla(330, 100%, 80%, ${this.alpha})` : `hsla(${this.hue}, 100%, 70%, ${this.alpha})`;
@@ -332,21 +379,68 @@
 
         // 创建粒子
         function createParticles(x, y, hue) {
-            let particleCount = 80;
+            let particleCount = 100; // 增加粒子数量
             while (particleCount--) {
                 particles.push(new Particle(x, y, hue));
             }
         }
 
-        // 创建心形烟花
+        // 创建爱心烟花
         function createHeartFirework() {
-            const tx = width / 2;
-            const ty = height / 3;
-            const particleCount = 150;
+            const tx = width / 2 + (Math.random() - 0.5) * (width / 4);
+            const ty = height / 3 + (Math.random() - 0.5) * (height / 6);
+            const particleCount = 180; // 增加爱心粒子
 
             for (let i = 0; i < particleCount; i++) {
                 particles.push(new Particle(tx, ty, 0, true));
             }
+        }
+
+        // 创建特殊爱心烟花
+        function createSpecialHeartFirework() {
+            const tx = Math.random() * (width * 0.8) + width * 0.1;
+            const ty = Math.random() * (height * 0.5) + height * 0.1;
+
+            // 先放一个普通烟花
+            fireworks.push(new Firework(width / 2, height, tx, ty, 330));
+
+            // 然后生成爱心粒子
+            setTimeout(() => {
+                const particleCount = 120;
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle(tx, ty, 0, true));
+                }
+            }, 800);
+        }
+
+        // 创建飘动的爱心
+        function createFloatingHearts() {
+            const heartsContainer = document.getElementById('heartsContainer');
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.innerHTML = '❤';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            heartsContainer.appendChild(heart);
+
+            setTimeout(() => {
+                heart.remove();
+            }, 10000);
+        }
+
+        // 显示芯芯宝宝文字
+        function showNameText(x, y) {
+            const text = document.createElement('div');
+            text.className = 'name-text';
+            text.textContent = '芯芯宝宝';
+            text.style.left = (x - 60) + 'px';
+            text.style.top = (y - 30) + 'px';
+            document.body.appendChild(text);
+
+            setTimeout(() => {
+                text.remove();
+            }, 1500);
         }
 
         // 动画循环
@@ -355,7 +449,7 @@
 
             // 创建轨迹效果
             ctx.globalCompositeOperation = 'destination-out';
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
             ctx.fillRect(0, 0, width, height);
             ctx.globalCompositeOperation = 'lighter';
 
@@ -379,35 +473,24 @@
                 }
             }
 
-            // 定期发射烟花
-            if (isStarted && timestamp % 1500 < 20) {
-                const sx = width / 2 + (Math.random() - 0.5) * (width / 3);
+            // 增加烟花频率（更多烟花）
+            if (isStarted && timestamp % 800 < 20) {
+                const sx = width / 2 + (Math.random() - 0.5) * (width / 2.5);
                 const sy = height;
                 const tx = Math.random() * (width * 0.8) + width * 0.1;
                 const ty = Math.random() * (height * 0.5) + height * 0.1;
                 fireworks.push(new Firework(sx, sy, tx, ty));
             }
 
-            // 心形烟花特殊触发
-            if (isStarted && timestamp > 15000 && timestamp < 15500 && Math.random() > 0.95) {
+            // 定期触发爱心烟花（更频繁）
+            if (isStarted && timestamp % 3000 < 20) {
                 createHeartFirework();
             }
-        }
 
-        // 创建飘动的爱心
-        function createFloatingHearts() {
-            const heartsContainer = document.getElementById('heartsContainer');
-            const heart = document.createElement('div');
-            heart.className = 'heart';
-            heart.innerHTML = '❤';
-            heart.style.left = Math.random() * 100 + 'vw';
-            heart.style.animationDuration = (Math.random() * 5 + 5) + 's';
-            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
-            heartsContainer.appendChild(heart);
-
-            setTimeout(() => {
-                heart.remove();
-            }, 10000);
+            // 随机触发特殊爱心烟花
+            if (isStarted && timestamp > 5000 && Math.random() > 0.98) {
+                createSpecialHeartFirework();
+            }
         }
 
         // 启动动画
@@ -415,26 +498,29 @@
             if (isStarted) return;
             isStarted = true;
 
-            // 隐藏提示
-            const hint = document.getElementById('hint');
-            hint.style.opacity = '0';
-            hint.style.transform = 'scale(0.8)';
-            hint.style.pointerEvents = 'none';
+            // 隐藏卡片
+            const card = document.getElementById('welcomeCard');
+            card.classList.add('hidden');
+
+            // 隐藏底部文字
+            const footer = document.getElementById('footer');
+            footer.classList.add('hidden');
 
             // 开始创建爱心
-            setInterval(createFloatingHearts, 500);
+            setInterval(createFloatingHearts, 400);
 
-            // 特殊提示
+            // 初始放几个烟花
             setTimeout(() => {
-                const card = document.querySelector('.card');
-                card.style.transform = 'scale(1.02)';
-                card.style.boxShadow = '0 0 40px rgba(255, 105, 180, 0.7)';
-
-                setTimeout(() => {
-                    card.style.transform = 'scale(1)';
-                    card.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.5)';
-                }, 1000);
-            }, 8000);
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        const sx = width / 2 + (Math.random() - 0.5) * (width / 3);
+                        const sy = height;
+                        const tx = Math.random() * (width * 0.8) + width * 0.1;
+                        const ty = Math.random() * (height * 0.5) + height * 0.1;
+                        fireworks.push(new Firework(sx, sy, tx, ty));
+                    }, i * 300);
+                }
+            }, 300);
         }
 
         // 初始化
@@ -442,18 +528,35 @@
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
 
-            // 事件监听
-            const hint = document.getElementById('hint');
-            hint.addEventListener('click', startShow);
-            hint.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                startShow();
+            // 按钮点击事件
+            const startBtn = document.getElementById('startBtn');
+            startBtn.addEventListener('click', startShow);
+
+            // 屏幕点击事件 - 显示芯芯宝宝
+            document.addEventListener('click', (e) => {
+                if (isStarted) {
+                    showNameText(e.clientX, e.clientY);
+
+                    // 在点击位置也放一个小烟花
+                    const sx = e.clientX + (Math.random() - 0.5) * 50;
+                    const sy = e.clientY + 50;
+                    const tx = e.clientX;
+                    const ty = e.clientY - 50;
+                    fireworks.push(new Firework(sx, sy, tx, ty, 330));
+                }
             });
 
-            // 页面点击也能触发
-            document.addEventListener('click', (e) => {
-                if (e.target !== hint && !isStarted) {
-                    startShow();
+            // 触摸事件支持
+            document.addEventListener('touchstart', (e) => {
+                if (isStarted) {
+                    const touch = e.touches[0];
+                    showNameText(touch.clientX, touch.clientY);
+
+                    const sx = touch.clientX + (Math.random() - 0.5) * 50;
+                    const sy = touch.clientY + 50;
+                    const tx = touch.clientX;
+                    const ty = touch.clientY - 50;
+                    fireworks.push(new Firework(sx, sy, tx, ty, 330));
                 }
             });
 
@@ -461,13 +564,14 @@
             animate(0);
         });
 
-        // 防止移动端滚动
+        // 防止移动端滚动和默认行为
         document.addEventListener('touchmove', (e) => {
-            if (isStarted) {
-                e.preventDefault();
-            }
+            e.preventDefault();
         }, { passive: false });
+
+        document.addEventListener('gesturestart', (e) => {
+            e.preventDefault();
+        });
     </script>
 </body>
 </html>
-
