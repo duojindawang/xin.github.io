@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>想你的次数 +1</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body {
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative;
+        }
+        .container { width: 100%; max-width: 450px; padding: 20px; z-index: 1; text-align: center; }
+        .title { font-size: 28px; font-weight: 700; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.3); margin-bottom: 10px; letter-spacing: 2px; }
+        .subtitle { font-size: 14px; color: #fff; opacity: 0.9; margin-bottom: 20px; }
+
+        .love-panel {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 25px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        .love-label { font-size: 16px; color: #fff; margin-bottom: 8px; font-weight: 500; letter-spacing: 1px; text-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .love-value { font-size: 48px; font-weight: 800; color: #fff; text-shadow: 0 0 20px rgba(255, 255, 255, 0.6); font-family: 'Courier New', monospace; transition: all 0.3s ease; }
+        .love-value.pulse { transform: scale(1.2); color: #fff; text-shadow: 0 0 30px rgba(255, 255, 255, 0.9); }
+
+        .love-container { position: relative; margin: 30px 0; perspective: 1000px; }
+        .love-heart { width: 180px; height: 180px; margin: 0 auto; cursor: pointer; transition: transform 0.1s ease; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3)); animation: floatHeart 3s ease-in-out infinite; }
+        @keyframes floatHeart { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-6px) rotate(2deg); } }
+        .love-heart:active { transform: scale(0.9) rotate(0deg); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+        .love-heart.hit { animation: hitAnimation 0.3s ease; }
+        @keyframes hitAnimation { 0% { transform: scale(1); } 50% { transform: scale(0.85) rotate(-5deg); } 100% { transform: scale(1); } }
+
+        .float-text { position: absolute; color: #fff; font-size: 24px; font-weight: bold; pointer-events: none; text-shadow: 0 2px 8px rgba(0,0,0,0.3); animation: floatUp 1s ease-out forwards; z-index: 10; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-80px) scale(1.3); } }
+
+        .controls { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .btn { padding: 12px 24px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; color: white; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .btn:active { transform: scale(0.95); }
+        .btn-primary { background: linear-gradient(135deg, #ff758c, #ff7eb3); }
+        .btn-secondary { background: linear-gradient(135deg, #a8edea, #fed6e3); color: #333; }
+        .btn-danger { background: linear-gradient(135deg, #ff9a9e, #fecfef); color: #333; }
+
+        .sound-toggle { position: fixed; bottom: 20px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); transition: all 0.2s; z-index: 50; }
+        .sound-toggle:active { transform: scale(0.9); }
+        .sound-toggle.muted { opacity: 0.5; }
+
+        .auto-mode-indicator { position: fixed; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.25); color: white; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid rgba(255, 255, 255, 0.5); display: none; animation: pulse 2s infinite; }
+        .auto-mode-indicator.active { display: block; }
+        @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+        .vibration-tip { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.7); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .vibration-tip.show { opacity: 1; }
+
+        .bg-decoration { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; opacity: 0.15; background-image: radial-gradient(circle at 20% 30%, #fff 2px, transparent 2px), radial-gradient(circle at 80% 70%, #fff 2px, transparent 2px); background-size: 60px 60px; animation: float 20s linear infinite; }
+        @keyframes float { 0% { transform: translateY(0); } 100% { transform: translateY(-50px); } }
+
+        @media (max-width: 480px) {
+            .title { font-size: 24px; }
+            .love-value { font-size: 42px; }
+            .love-heart { width: 150px; height: 150px; }
+            .btn { padding: 10px 18px; font-size: 14px; }
+        }
+
+        /* 互动文字动画 */
+        .interaction-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            animation: interactionPop 2s ease-out forwards;
+            text-align: center;
+            max-width: 80%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        @keyframes interactionPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            15% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+            85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+    <div class="container">
+        <h1 class="title">想你的次数</h1>
+        <p class="subtitle">每敲一次，思念加深一分</p>
+
+        <div class="love-panel">
+            <div class="love-label">思念计数</div>
+            <div class="love-value" id="loveCount">0</div>
+        </div>
+
+        <div class="love-container" id="loveContainer">
+            <!-- 爱心SVG -->
+            <svg class="love-heart" id="heart" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- 阴影 -->
+                <ellipse cx="100" cy="165" rx="45" ry="10" fill="rgba(0,0,0,0.25)"/>
+
+                <defs>
+                    <!-- 渐变色 -->
+                    <linearGradient id="heartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#ff758c;stop-opacity:1"/>
+                        <stop offset="50%" style="stop-color:#ff7eb3;stop-opacity:1"/>
+                        <stop offset="100%" style="stop-color:#ff6b9c;stop-opacity:1"/>
+                    </linearGradient>
+
+                    <linearGradient id="shineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:rgba(255,255,255,0.8)"/>
+                        <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
+                    </linearGradient>
+
+                    <radialGradient id="heartHighlight" cx="30%" cy="30%" r="70%">
+                        <stop offset="0%" style="stop-color:rgba(255,255,255,0.6)"/>
+                        <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
+                    </radialGradient>
+                </defs>
+
+                <!-- 爱心主体 - 经典心形 -->
+                <g id="heartBody" transform="translate(100, 100)">
+                    <path d="M 0 -40 Q 35 -40 35 -5 Q 35 25 0 50 Q -35 25 -35 -5 Q -35 -40 0 -40 Z"
+                          fill="url(#heartGradient)" stroke="#ff6b9c" stroke-width="2.5"/>
+
+                    <!-- 心形高光 -->
+                    <path d="M -10 -25 Q 0 -25 10 -25 Q 100 0 15 Q -10 0 -10 -25 Z"
+                          fill="url(#heartHighlight)" opacity="0.6"/>
+
+                    <!-- 顶部装饰 -->
+                    <circle cx="0" cy="-35" r="4" fill="#fff" opacity="0.8"/>
+                    <!-- 金色描边 -->
+                    <path d="M 0 -40 Q 35 -40 35 -5 Q 35 25 0 50 Q -35 25 -35 -5 Q -35 -40 0 -40 Z"
+                          fill="none" stroke="#FFD700" stroke-width="1.5" opacity="0.5"/>
+                </g>
+
+                <!-- 装饰性星星 -->
+                <g id="decorStars" opacity="0.6">
+                    <circle cx="70" cy="70" r="2" fill="#fff"/>
+                    <circle cx="130" cy="75" r="2.5" fill="#fff"/>
+                    <circle cx="65" cy="120" r="1.5" fill="#fff"/>
+                    <circle cx="135" cy="125" r="2" fill="#fff"/>
+                </g>
+
+                <!-- 爱心表情 -可爱风格 -->
+                <g id="heartFace" transform="translate(100, 100)" opacity="0.9">
+                    <!-- 眼睛 -->
+                    <ellipse cx="-12" cy="5" rx="3" ry="3.5" fill="#2a1a1a"/>
+                    <ellipse cx="12" cy="5" rx="3" ry="3.5" fill="#2a1a1a"/>
+                    <!-- 眼睛高光 -->
+                    <circle cx="-11" cy="4" r="0.8" fill="#fff" opacity="0.9"/>
+                    <circle cx="13" cy="4" r="0.8" fill="#fff" opacity="0.9"/>
+                    <!-- 微笑 -->
+                    <path d="M -8 15 Q 0 18 8 15" stroke="#2a1a1a" stroke-width="2" fill="none" stroke-linecap="round"/>
+                </g>
+
+                <!-- 敲击时的爱心特效（隐藏） -->
+                <g id="heartParticles" opacity="0">
+                    <!--飞出的小心心 -->
+                    <path d="M 100 100 L 102 105 L 107 105 L 103 108 L 105 113 L 100 110 L 95 113 L 97 108 L 93 105 L 98 105 Z" fill="#fff" transform="translate(0,0)">
+                        <animate attributeName="transform" from="translate(0,0) scale(0)" to="translate(-30,-40) scale(1.2)" dur="0.6s" begin="indefinite" id="particleAnim1"/>
+                        <animate attributeName="opacity" from="1" to="0" dur="0.6s" begin="indefinite" id="particleFade1"/>
+                    </path>
+                    <path d="M 100 100 L 102 105 L 107 105 L 103 108 L 105 113 L 100 110 L 95 113 L 97 108 L 93 105 L 98 105 Z" fill="#fff" transform="translate(0,0)">
+                        <animate attributeName="transform" from="translate(0,0) scale(0)" to="translate(30,-40) scale(1.2)" dur="0.6s" begin="indefinite" id="particleAnim2"/>
+                        <animate attributeName="opacity" from="1" to="0" dur="0.6s" begin="indefinite" id="particleFade2"/>
+                    </path>
+                    <circle cx="100" cy="100" r="3" fill="#fff">
+                        <animate attributeName="r" from="3" to="10" dur="0.6s" begin="indefinite" id="particleAnim3"/>
+                        <animate attributeName="opacity" from="0.8" to="0" dur="0.6s" begin="indefinite" id="particleFade3"/>
+                    </circle>
+                </g>
+
+                <!-- 光环（点击时显示） -->
+                <circle id="halo" cx="100" cy="100" r="0" fill="none" stroke="#fff" stroke-width="4" opacity="0">
+                    <animate attributeName="r" from="0" to="90" dur="0.6s" begin="indefinite" id="haloAnim"/>
+                    <animate attributeName="opacity" from="0.8" to="0" dur="0.6s" begin="indefinite" id="haloFade"/>
+                </circle>
+            </svg>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="manualBtn">敲一下</button>
+            <button class="btn btn-secondary" id="autoBtn">自动想念</button>
+            <button class="btn btn-danger" id="resetBtn">清空思念</button>
+        </div>
+    </div>
+
+    <div class="sound-toggle" id="soundToggle" title="切换音效">🔊</div>
+    <div class="auto-mode-indicator" id="autoIndicator">AUTO 想念中</div>
+    <div class="vibration-tip" id="vibrationTip">已开启振动</div>
+
+    <script>
+        // 游戏状态
+        const state = {
+            loveCount: 0,
+            isAutoMode: false,
+            isMuted: false,
+            lastClickTime: 0,
+            clickDelay: 100,
+            autoInterval: null,
+            interactionCount: 0,
+            interactions: ["想你了!", "好想你!", "思念+1!", "心里全是你!", "想抱抱!", "想你的笑!", "想你的声音!", "想你在身边!", "思念成疾!", "超级想你!"]
+        };
+
+        // DOM元素
+        const loveCountEl = document.getElementById('loveCount');
+        const heartEl = document.getElementById('heart');
+        const loveContainer = document.getElementById('loveContainer');
+        const manualBtn = document.getElementById('manualBtn');
+        const autoBtn = document.getElementById('autoBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const soundToggle = document.getElementById('soundToggle');
+        const autoIndicator = document.getElementById('autoIndicator');
+        const vibrationTip = document.getElementById('vibrationTip');
+
+        // Web Audio API
+        let audioContext = null;
+        let isAudioInitialized = false;
+
+        function initAudio() {
+            if (!isAudioInitialized) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    isAudioInitialized = true;
+                } catch (e) { console.log('Web Audio API 不支持'); }
+            }
+        }
+
+        function playLoveSound() {
+            if (state.isMuted || !isAudioInitialized || !audioContext) return;
+            try {
+                const now = audioContext.currentTime;
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.type = 'sine';
+                // 更加柔和的声音                oscillator.frequency.setValueAtTime(329.63, now); // E4
+                oscillator.frequency.exponentialRampToValueAtTime(440, now + 0.15); // A4
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.25, now + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.start(now);
+                oscillator.stop(now + 0.25);
+            } catch (e) {}
+        }
+
+        function vibrate() { if (navigator.vibrate) navigator.vibrate(30); }
+
+        function showVibrationTip() {
+            vibrationTip.classList.add('show');
+            setTimeout(() => vibrationTip.classList.remove('show'), 2000);
+        }
+
+        function createFloatText(x, y, text = '+1') {
+            const floatText = document.createElement('div');
+            floatText.className = 'float-text';
+            floatText.textContent = text;
+            floatText.style.left = x + 'px';
+            floatText.style.top = y + 'px';
+            const offsetX = (Math.random() - 0.5) * 20;
+            const offsetY = (Math.random() - 0.5) * 10;
+            floatText.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+            loveContainer.appendChild(floatText);
+            setTimeout(() => { if (floatText.parentNode) floatText.parentNode.removeChild(floatText); }, 1000);
+        }
+
+        function showInteraction() {
+            if (Math.random() > 0.65 && state.interactionCount < state.interactions.length) {
+                const text = state.interactions[state.interactionCount];
+                state.interactionCount++;
+                const interaction = document.createElement('div');
+                interaction.className = 'interaction-text';
+                interaction.textContent = text;
+                document.body.appendChild(interaction);
+                setTimeout(() => { if (interaction.parentNode) interaction.parentNode.removeChild(interaction); }, 2000);
+            }
+        }
+
+        function updateLoveDisplay() {
+            loveCountEl.textContent = state.loveCount.toLocaleString();
+            loveCountEl.classList.add('pulse');
+            setTimeout(() => loveCountEl.classList.remove('pulse'), 300);
+        }
+
+        function hitHeart(clientX, clientY) {
+            const now = Date.now();
+            if (now - state.lastClickTime < state.clickDelay) return;
+            state.lastClickTime = now;
+            if (!isAudioInitialized) initAudio();
+
+            state.loveCount++;
+            updateLoveDisplay();
+
+            // 视觉反馈
+            heartEl.classList.add('hit');
+            setTimeout(() => heartEl.classList.remove('hit'), 300);
+
+            // 音效
+            playLoveSound();
+            vibrate();
+
+            // 浮动文字
+            const rect = heartEl.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const offsetX = (clientX - centerX) * 0.3;
+            const offsetY = (clientY - centerY) * 0.3;
+            createFloatText(centerX + offsetX, centerY + offsetY, '+1');
+
+            // 眼睛闭合效果
+            const face = document.getElementById('heartFace');
+            if (face) {
+                face.style.opacity = '0.3';
+                setTimeout(() => face.style.opacity = '0.9', 150);
+            }
+
+            // 爱心粒子特效
+            const particles = document.getElementById('heartParticles');
+            const particleAnim1 = document.getElementById('particleAnim1');
+            const particleFade1 = document.getElementById('particleFade1');
+            const particleAnim2 = document.getElementById('particleAnim2');
+            const particleFade2 = document.getElementById('particleFade2');
+            const particleAnim3 = document.getElementById('particleAnim3');
+            const particleFade3 = document.getElementById('particleFade3');
+
+            if (particles && particleAnim1) {
+                particles.style.opacity = '1';
+                particleAnim1.beginElement();
+                particleFade1.beginElement();
+                setTimeout(() => particleAnim2.beginElement(), 80);
+                setTimeout(() => particleFade2.beginElement(), 80);
+                setTimeout(() => particleAnim3.beginElement(), 160);
+                setTimeout(() => particleFade3.beginElement(), 160);
+                setTimeout(() => particles.style.opacity = '0', 600);
+            }
+
+            // 光环特效
+            const haloAnim = document.getElementById('haloAnim');
+            const haloFade = document.getElementById('haloFade');
+            if (haloAnim && haloFade) {
+                haloAnim.beginElement();
+                haloFade.beginElement();
+            }
+
+            // 互动提示
+            if (state.loveCount % 3 === 0) showInteraction();
+
+            // 里程碑
+            if (state.loveCount === 100) showSpecialEffect('思念满百！', '#fff');
+            else if (state.loveCount === 520) showSpecialEffect('我爱你！', '#fff');
+            else if (state.loveCount === 999) showSpecialEffect('长长久久！', '#fff');
+        }
+
+        function showSpecialEffect(text, color) {
+            const special = document.createElement('div');
+            special.className = 'interaction-text';
+            special.textContent = text;
+            special.style.color = color;
+            special.style.fontSize = '24px';
+            special.style.background = 'rgba(255, 107, 156, 0.95)';
+            document.body.appendChild(special);
+            setTimeout(() => { if (special.parentNode) special.parentNode.removeChild(special); }, 3000);
+        }
+
+        function toggleAutoMode() {
+            if (state.isAutoMode) {
+                state.isAutoMode = false;
+                clearInterval(state.autoInterval);
+                state.autoInterval = null;
+                autoBtn.textContent = '自动想念';
+                autoBtn.classList.remove('btn-danger');
+                autoBtn.classList.add('btn-secondary');
+                autoIndicator.classList.remove('active');
+            } else {
+                state.isAutoMode = true;
+                autoBtn.textContent = '停止想念';
+                autoBtn.classList.remove('btn-secondary');
+                autoBtn.classList.add('btn-danger');
+                autoIndicator.classList.add('active');
+                state.autoInterval = setInterval(() => {
+                    if (state.isAutoMode) {
+                        const rect = heartEl.getBoundingClientRect();
+                        hitHeart(rect.left + rect.width / 2, rect.top + rect.height / 2);
+                    }
+                }, 800);
+            }
+        }
+
+        function resetLove() {
+            if (state.loveCount === 0) return;
+            const confirmReset = confirm(`确定要清空思念吗？当前次数：${state.loveCount}`);
+            if (confirmReset) {
+                state.loveCount = 0;
+                state.interactionCount = 0;
+                updateLoveDisplay();
+                if (state.isAutoMode) toggleAutoMode();
+                loveCountEl.style.transform = 'scale(0.5)';
+                setTimeout(() => loveCountEl.style.transform = 'scale(1)', 300);
+            }
+        }
+
+        function toggleSound() {
+            state.isMuted = !state.isMuted;
+            soundToggle.textContent = state.isMuted ? '🔇' : '🔊';
+            soundToggle.classList.toggle('muted', state.isMuted);
+            if (!state.isMuted && !isAudioInitialized) initAudio();
+        }
+
+        // 事件监听
+        heartEl.addEventListener('click', (e) => { e.stopPropagation(); hitHeart(e.clientX, e.clientY); });
+        heartEl.addEventListener('touchstart', (e) => { e.preventDefault(); const touch = e.touches[0]; hitHeart(touch.clientX, touch.clientY); });
+        loveContainer.addEventListener('click', (e) => { if (e.target === heartEl || e.target.closest('.love-heart')) return; hitHeart(e.clientX, e.clientY); });
+        manualBtn.addEventListener('click', (e) => { e.stopPropagation(); const rect = heartEl.getBoundingClientRect(); hitHeart(rect.left + rect.width / 2, rect.top + rect.height / 2); });
+        autoBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleAutoMode(); });
+        resetBtn.addEventListener('click', (e) => { e.stopPropagation(); resetLove(); });
+        soundToggle.addEventListener('click', (e) => { e.stopPropagation(); toggleSound(); });
+        document.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); const rect = heartEl.getBoundingClientRect(); hitHeart(rect.left + rect.width / 2, rect.top + rect.height / 2); } });
+        document.addEventListener('visibilitychange', () => { if (document.hidden && state.isAutoMode) toggleAutoMode(); });
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // 初始化
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) e.preventDefault();
+            lastTouchEnd = now;
+        }, false);
+
+        // 保存/加载
+        function saveLove() { try { localStorage.setItem('heart_love_count', state.loveCount.toString()); } catch (e) {} }
+        function loadLove() { try { const saved = localStorage.getItem('heart_love_count'); if (saved) { state.loveCount = parseInt(saved) || 0; updateLoveDisplay(); } } catch (e) {} }
+        setInterval(saveLove, 10000);
+        loadLove();
+        window.addEventListener('beforeunload', saveLove);
+
+        // 首次提示
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const welcome = document.createElement('div');
+                welcome.className = 'interaction-text';
+                welcome.textContent = '点击爱心，表达思念';
+                welcome.style.background = 'rgba(255, 117, 140, 0.95)';
+                document.body.appendChild(welcome);
+                setTimeout(() => { if (welcome.parentNode) welcome.parentNode.removeChild(welcome); }, 2500);
+            }, 1000);
+
+            const showTipOnce = () => {
+                showVibrationTip();
+                document.removeEventListener('click', showTipOnce);
+                document.removeEventListener('touchstart', showTipOnce);
+            };
+            document.addEventListener('click', showTipOnce, { once: true });
+            document.addEventListener('touchstart', showTipOnce, { once: true });
+        });
+    </script>
+</body>
+</html>
